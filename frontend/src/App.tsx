@@ -7,6 +7,10 @@ import UserHome from "@/pages/User/Home";
 
 import Login from '@/pages/Auth/Login';
 import Signup from '@/pages/Auth/Signup';
+import Cart from "@/pages/User/Cart";
+import Orders from "@/pages/User/Orders";
+import Profile from "@/pages/User/Profile";
+import MyProducts from "@/pages/User/MyProducts";
 
 const App = () => {
   return (
@@ -35,6 +39,11 @@ const App = () => {
             <ProtectedRoute userType='USER'>
               <Routes>
                 <Route path="/" element={<UserHome />} />
+                <Route path="cart" element={<Cart />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="my-products" element={<MyProducts />} />
+                <Route path="*" element={<UserHome />} />
               </Routes>
             </ProtectedRoute>
           } />
