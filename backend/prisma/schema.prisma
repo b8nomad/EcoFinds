@@ -18,17 +18,66 @@ enum UserRole {
   USER
 }
 
+enum ProductStatus {
+  UNDER_REVIEW
+  REVIEWED
+  ACTIVE
+  INACTIVE
+  SOLD
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
 model User {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   name       String
-  email      String    @unique
-  role       UserRole @default(USER)
-  cart_id    String[]
+  email      String   @unique
   password   String
   image_url  String?
   location   String?
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  role       UserRole @default(USER)
+  cart_id    String[] @map("cart_id")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@map("user")
+  products Product[] @relation("UserProducts")
+  orders   Order[]   @relation("UserOrders")
+
+  @@map("users")
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  seller_id   String
+  name        String
+  description String
+  price       Float
+  image_url   String?
+  status      ProductStatus @default(ACTIVE)
+  category    String
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  seller User    @relation("UserProducts", fields: [seller_id], references: [id])
+  orders Order[]
+
+  @@map("products")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  user_id    String
+  product_id String
+  status     OrderStatus @default(PENDING)
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+
+  user    User    @relation("UserOrders", fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@map("orders")
 }
