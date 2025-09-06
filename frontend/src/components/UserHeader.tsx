@@ -58,6 +58,15 @@ const UserHeader = () => {
                             <Package className="h-4 w-4 mr-2" />
                             My Products
                         </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate('/user/orders')}
+                            className={`hover:bg-gray-800 ${active('/user/orders') ? 'text-green-400 bg-gray-800/60' : ''}`}
+                        >
+                            <Package className="h-4 w-4 mr-2" />
+                            My Orders
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={logout} className="hover:bg-gray-800">
                             <LogOut className="h-4 w-4 mr-2" />
                             Logout

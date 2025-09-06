@@ -3,6 +3,10 @@ import { RoleBasedRedirect } from './components/RoleBasedRedirect';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 import AdminHome from "@/pages/Admin/Home";
+import AdminProducts from "@/pages/Admin/Products";
+import AdminUsers from "@/pages/Admin/Users";
+import AdminOrders from "@/pages/Admin/Orders";
+import AdminAnalytics from "@/pages/Admin/Analytics";
 import UserHome from "@/pages/User/Home";
 
 import Login from '@/pages/Auth/Login';
@@ -30,6 +34,11 @@ const App = () => {
             <ProtectedRoute userType='ADMIN'>
               <Routes>
                 <Route path="/" element={<AdminHome />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="*" element={<AdminHome />} />
               </Routes>
             </ProtectedRoute>
           } />

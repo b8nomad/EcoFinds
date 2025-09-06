@@ -176,6 +176,11 @@ export const addToCart = async (req, res) => {
             return res.status(404).json({ success: false, message: "Product not found or not available" });
         }
 
+        // disallow adding own product to cart
+        if (product.seller_id === req.user.userId) {
+            return res.status(400).json({ success: false, message: "You cannot add your own product to the cart" });
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: req.user.userId },
             select: { cart_id: true }
@@ -356,7 +361,9 @@ export const getAllProducts = async (req, res) => {
         const { category, search, page = 1, limit = 10 } = req.query;
 
         const where = {
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            // exclude requester’s own listings from the marketplace feed
+            seller_id: { not: req.user.userId }
         };
 
         if (category) {
@@ -457,14 +464,20 @@ export const createPurchase = async (req, res) => {
             return res.status(400).json({ success: false, message: "Some products are not available" });
         }
 
-        // Create orders for each product
+        // Disallow purchasing own products
+        const ownsAny = products.some(p => p.seller_id === req.user.userId);
+        if (ownsAny) {
+            return res.status(400).json({ success: false, message: "You cannot purchase your own products" });
+        }
+
+        // Create orders for each product, mark as COMPLETED upon successful checkout
         const orders = await Promise.all(
             productIds.map(productId =>
                 prisma.order.create({
                     data: {
                         user_id: req.user.userId,
                         product_id: productId,
-                        status: 'PENDING'
+                        status: 'COMPLETED'
                     },
                     include: {
                         product: {
@@ -483,19 +496,6 @@ export const createPurchase = async (req, res) => {
         await prisma.product.updateMany({
             where: { id: { in: productIds } },
             data: { status: 'SOLD' }
-        });
-
-        // Clear cart
-        const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
-            select: { cart_id: true }
-        });
-
-        const updatedCart = user.cart_id.filter(id => !productIds.includes(id));
-
-        await prisma.user.update({
-            where: { id: req.user.userId },
-            data: { cart_id: updatedCart }
         });
 
         res.status(201).json({

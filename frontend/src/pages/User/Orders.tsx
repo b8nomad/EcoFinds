@@ -69,14 +69,6 @@ const Orders = () => {
       <UserHeader />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => window.location.href = '/user'}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
-          </Button>
           <h1 className="text-3xl font-bold text-gray-100">Order History</h1>
           <p className="text-gray-400 mt-2">{orders.length} orders placed</p>
         </div>
@@ -94,7 +86,7 @@ const Orders = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gray-900 border border-gray-800">
             <CardContent className="p-6">
               <div className="flex items-center">
