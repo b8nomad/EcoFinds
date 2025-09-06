@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ShoppingCart, Search, Package } from 'lucide-react'
+import { ShoppingCart, Search, Package, Leaf } from 'lucide-react'
 import { toast } from 'sonner'
 import UserHeader from '@/components/UserHeader'
 
@@ -29,6 +29,27 @@ interface PaginationData {
   hasPrev: boolean
 }
 
+const carouselSlides = [
+  {
+    icon: <Package className="h-16 w-16 text-green-400" />,
+    title: 'Welcome to EcoFinds',
+    desc: 'Discover and shop eco-friendly products from your community.',
+    gradient: 'bg-green-500/10'
+  },
+  {
+    icon: <ShoppingCart className="h-16 w-16 text-blue-400" />,
+    title: 'Sell Your Preloved Items',
+    desc: 'List your unused items and give them a new life.',
+    gradient: 'bg-blue-500/10'
+  },
+  {
+    icon: <Leaf className="h-16 w-16 text-emerald-400" />,
+    title: 'Support Sustainable Living',
+    desc: 'Every purchase helps reduce waste and supports local sellers.',
+    gradient: 'bg-emerald-500/10'
+  },
+]
+
 const Home = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,6 +69,21 @@ const Home = () => {
     'Beauty', 'Toys', 'Automotive', 'Food', 'Other'
   ]
 
+  // Carousel state
+  const [carouselIdx, setCarouselIdx] = useState(0)
+  const carouselInterval = useRef<NodeJS.Timeout | null>(null)
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (searchTerm || selectedCategory) return // pause carousel when searching/filtering
+    carouselInterval.current = setInterval(() => {
+      setCarouselIdx(idx => (idx + 1) % carouselSlides.length)
+    }, 4000)
+    return () => { if (carouselInterval.current) clearInterval(carouselInterval.current) }
+  }, [searchTerm, selectedCategory])
+
+  // derive accent for current slide (used in glow/particles)
+  const accent = ['#22c55e', '#3b82f6', '#10b981'][carouselIdx % 3]
 
   const fetchProducts = async () => {
     try {
@@ -128,8 +164,73 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 relative">
       <UserHeader />
-      {/* Search and Filter Section */}
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Carousel and Home Intro */}
+        {!(searchTerm || selectedCategory) && (
+          <div className="mb-8">
+            <div className="relative w-full rounded-xl overflow-hidden bg-gray-900 border border-gray-800 shadow-lg">
+              {/* Gradient circle */}
+              <div
+                className={`pointer-events-none absolute -top-10 -right-10 w-56 h-56 rounded-full blur-2xl ${carouselSlides[carouselIdx].gradient}`}
+              />
+              {/* New subtle animated elements */}
+              {/* Top-left small glow */}
+              <div
+                className="pointer-events-none absolute -top-6 -left-6 w-24 h-24 rounded-full blur-2xl opacity-60 animate-pulse"
+                style={{ background: `${accent}33` }}
+              />
+              {/* Diagonal light beam */}
+              <div
+                className="pointer-events-none absolute -bottom-8 left-1/3 w-2/3 h-20 rotate-[-15deg] rounded-full opacity-40 animate-pulse"
+                style={{ background: `linear-gradient(90deg, transparent, ${accent}33, transparent)` }}
+              />
+              {/* Floating ping dots */}
+              <div className="pointer-events-none absolute top-6 right-1/2">
+                <span className="relative block w-2 h-2 rounded-full" style={{ background: accent }}>
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: accent, opacity: 0.35 }} />
+                </span>
+              </div>
+              <div className="pointer-events-none absolute bottom-6 left-12">
+                <span className="relative block w-2 h-2 rounded-full" style={{ background: accent }}>
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: accent, opacity: 0.35 }} />
+                </span>
+              </div>
+              {/* Slow rotating ring */}
+              <svg
+                className="pointer-events-none absolute -bottom-10 -right-10 w-40 h-40 animate-spin"
+                style={{ animationDuration: '14s' }}
+                viewBox="0 0 100 100"
+              >
+                <circle cx="50" cy="50" r="42" stroke={accent} strokeOpacity="0.25" strokeWidth="2" strokeDasharray="6 8" fill="none" />
+              </svg>
+
+              <div className="flex items-center">
+                <div className="flex items-center justify-center h-48 w-48 hidden md:flex">
+                  {carouselSlides[carouselIdx].icon}
+                </div>
+                <div className="flex-1 p-6">
+                  <h2 className="text-2xl md:text-3xl font-bold text-green-400 mb-2">{carouselSlides[carouselIdx].title}</h2>
+                  <p className="text-gray-300 text-lg">{carouselSlides[carouselIdx].desc}</p>
+                </div>
+              </div>
+              {/* Carousel controls */}
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                {carouselSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`w-3 h-3 rounded-full ${i === carouselIdx ? 'bg-green-400' : 'bg-gray-700'}`}
+                    style={{ transition: 'background 0.2s' }}
+                    aria-label={`Go to slide ${i + 1}`}
+                    onClick={() => setCarouselIdx(i)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search and Filter Section */}
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           {/* input with leading icon */}
           <div className="flex-1 flex gap-2">
