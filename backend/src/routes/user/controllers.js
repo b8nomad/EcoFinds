@@ -111,6 +111,30 @@ export const changePassword = async (req, res) => {
     }
 };
 
+export const updateProfileImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No image uploaded" });
+        }
+        const updated = await prisma.user.update({
+            where: { id: req.user.userId },
+            data: { image_url: req.file.filename },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                location: true,
+                image_url: true,
+                created_at: true,
+                role: true
+            }
+        });
+        return res.json({ success: true, message: "Profile image updated", data: updated });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+};
+
 // 2. Cart Management
 export const getCart = async (req, res) => {
     try {

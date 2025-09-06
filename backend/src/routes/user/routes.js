@@ -14,7 +14,8 @@ import {
     getOrderHistory,
     getAllProducts,
     getProductById,
-    createPurchase
+    createPurchase,
+    updateProfileImage
 } from './controllers.js';
 
 import multer from 'multer';
@@ -41,6 +42,7 @@ router.use(authenticate);
 // Profile Management
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
+router.put('/profile/image', upload.single('image'), updateProfileImage); // added
 router.put('/password', changePassword);
 
 // Cart Management

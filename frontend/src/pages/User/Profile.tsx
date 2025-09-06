@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,7 +22,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,6 +35,9 @@ const Profile = () => {
     newPassword: '',
     confirmPassword: ''
   })
+
+  const imageBase = import.meta.env.VITE_IMAGE_URL
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const fetchProfile = async () => {
     try {
@@ -129,6 +132,39 @@ const Profile = () => {
     }
   }
 
+  const onProfileImageChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    try {
+      setSaving(true)
+      const token = localStorage.getItem('token')
+      const body = new FormData()
+      body.append('image', file)
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/user/profile/image`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success('Profile photo updated')
+        setProfile(data.data)
+        setFormData((prev) => ({ ...prev, image_url: data.data.image_url || '' }))
+      } else {
+        toast.error(data.message || 'Failed to update photo')
+      }
+    } catch {
+      toast.error('Failed to update photo')
+    } finally {
+      setSaving(false)
+      e.currentTarget.value = ''
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -147,8 +183,11 @@ const Profile = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Info Card */}
+          {/* Profile Info + Photo */}
           <div className="lg:col-span-2">
+
+
+            {/* Personal Information */}
             <Card className="bg-gray-900 border border-gray-800">
               <CardHeader>
                 <CardTitle className="text-gray-100">Personal Information</CardTitle>
@@ -161,7 +200,7 @@ const Profile = () => {
                       id="name"
                       className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                       value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                   <div>
@@ -171,30 +210,19 @@ const Profile = () => {
                       type="email"
                       className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
                     className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                     value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="City, Country"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="image_url">Profile Image URL</Label>
-                  <Input
-                    id="image_url"
-                    className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                    placeholder="https://example.com/image.jpg"
                   />
                 </div>
 
@@ -206,14 +234,14 @@ const Profile = () => {
             </Card>
 
             {/* Password Change Card */}
-            <Card className="mt-6 bg-gray-900 border border-gray-800">
+            <Card className="my-6 bg-gray-900 border border-gray-800">
               <CardHeader>
                 <CardTitle className="text-gray-100">Password & Security</CardTitle>
               </CardHeader>
               <CardContent>
                 {!showPasswordForm ? (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowPasswordForm(true)}
                     className="w-full"
                   >
@@ -229,7 +257,7 @@ const Profile = () => {
                         type="password"
                         className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                         value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                       />
                     </div>
                     <div>
@@ -239,7 +267,7 @@ const Profile = () => {
                         type="password"
                         className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                         value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                       />
                     </div>
                     <div>
@@ -249,15 +277,15 @@ const Profile = () => {
                         type="password"
                         className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
                         value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                       />
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={changePassword} disabled={saving} className="flex-1">
                         {saving ? 'Changing...' : 'Change Password'}
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => {
                           setShowPasswordForm(false)
                           setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -281,15 +309,40 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {profile?.image_url && (
-                    <div className="flex justify-center">
-                      <img
-                        src={profile.image_url}
-                        alt="Profile"
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
-                    </div>
-                  )}
+                  <div className="flex justify-center">
+                    {profile?.image_url ? (
+                      <div
+                        className="relative group cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Click to change photo"
+                      >
+                        <img
+                          src={`${imageBase}/${profile.image_url}`}
+                          alt="Profile"
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                        <div className="pointer-events-none absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white transition">
+                          Change
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="w-20 h-20 rounded-full bg-gray-800 text-gray-300 text-xs flex items-center justify-center border border-gray-700 hover:bg-gray-700 transition"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Click to upload photo"
+                      >
+                        Upload Photo
+                      </button>
+                    )}
+                    <input
+                      id="profile-image-input"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={onProfileImageChange}
+                    />
+                  </div>
                   <div className="text-center">
                     <h3 className="font-semibold text-lg text-gray-100">{profile?.name}</h3>
                     <p className="text-gray-400">{profile?.email}</p>
