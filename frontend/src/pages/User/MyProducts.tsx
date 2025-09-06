@@ -188,10 +188,10 @@ const MyProducts = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'bg-green-900/30 text-green-400 border border-green-800'
-      case 'UNDER_REVIEW': return 'bg-yellow-900/30 text-yellow-400 border border-yellow-800'
-      case 'INACTIVE': return 'bg-gray-800 text-gray-300 border border-gray-700'
-      case 'SOLD': return 'bg-blue-900/30 text-blue-400 border border-blue-800'
+      case 'ACTIVE': return 'bg-green-700 text-white border border-green-800'
+      case 'UNDER_REVIEW': return 'bg-yellow-700 text-white border border-yellow-800'
+      case 'INACTIVE': return 'bg-gray-800 text-white border border-gray-700'
+      case 'SOLD': return 'bg-red-700 text-white border border-red-800'
       default: return 'bg-gray-800 text-gray-300 border border-gray-700'
     }
   }

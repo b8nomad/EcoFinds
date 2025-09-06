@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 const prisma = new PrismaClient();
 
-async function login(req, res) {
+export const login = async function login(req, res) {
     try {
         // Validate request body
         if (!req.body) return res.status(400).json({ success: false, message: "Request body is missing" });
@@ -29,7 +29,7 @@ async function login(req, res) {
     }
 }
 
-async function signup(req, res) {
+export const signup = async function signup(req, res) {
     try {
         // Validate request body
         if (!req.body) return res.status(400).json({ success: false, message: "Request body is missing" });
@@ -57,5 +57,3 @@ async function signup(req, res) {
         return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 }
-
-export { login, signup }
