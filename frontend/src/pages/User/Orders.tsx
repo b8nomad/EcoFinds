@@ -142,8 +142,8 @@ const Orders = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <img
-                        src={order.product.image_url || '/placeholder-product.jpg'}
                         alt={order.product.name}
+                        src={`${import.meta.env.VITE_IMAGE_URL}/${order.product.image_url}`}
                         className="h-16 w-16 rounded-lg object-cover"
                       />
                       <div>

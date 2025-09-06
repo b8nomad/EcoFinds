@@ -12,7 +12,8 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2"
   },
   "author": "",
   "license": "ISC",
@@ -22,7 +23,8 @@
     "#routes/*": "./src/routes/*",
     "#middlewares/*": "./src/middlewares/*",
     "#user/*": "./src/routes/user/*",
-    "#auth/*": "./src/routes/auth/*"
+    "#auth/*": "./src/routes/auth/*",
+    "#uploads/*": "./uploads/*"
   },
   "devDependencies": {
     "prisma": "^6.15.0"

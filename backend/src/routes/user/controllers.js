@@ -1,7 +1,35 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
+
+// ensure uploads dir exists
+const ensureUploadsDir = () => {
+    const dir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return dir;
+};
+
+// multer disk storage to local uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = ensureUploadsDir();
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+        const name = `${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`;
+        cb(null, name);
+    }
+});
+const fileFilter = (req, file, cb) => {
+    if (/^image\/(jpe?g|png|webp|gif)$/i.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+};
+const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // 1. Profile Management
 export const getProfile = async (req, res) => {
@@ -32,7 +60,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { name, email, location, image_url } = req.body;
-        
+
         const updatedUser = await prisma.user.update({
             where: { id: req.user.userId },
             data: { name, email, location, image_url },
@@ -171,11 +199,14 @@ export const removeFromCart = async (req, res) => {
 // 3. Product Management (as a Seller)
 export const createProduct = async (req, res) => {
     try {
-        const { name, description, category, price, image_url } = req.body;
-
+        console.log('Request body:', req.body);
+        console.log('Uploaded file:', req.file);
+        const { name, description, category, price } = req.body || {};
         if (!name || !description || !category || !price) {
             return res.status(400).json({ success: false, message: "All required fields must be provided" });
         }
+
+        const image_url = req.file ? req.file.filename : null;
 
         const product = await prisma.product.create({
             data: {
@@ -193,7 +224,7 @@ export const createProduct = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
-};
+}
 
 export const getMyProducts = async (req, res) => {
     try {
@@ -208,32 +239,43 @@ export const getMyProducts = async (req, res) => {
     }
 };
 
-export const updateProduct = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { name, description, category, price, image_url } = req.body;
+export const updateProduct = [
+    upload.single('image'),
+    async (req, res) => {
+        try {
+            const { productId } = req.params;
+            const { name, description, category, price } = req.body || {};
 
-        const product = await prisma.product.findFirst({
-            where: {
-                id: productId,
-                seller_id: req.user.userId
+            const product = await prisma.product.findFirst({
+                where: { id: productId, seller_id: req.user.userId }
+            });
+
+            if (!product) {
+                return res.status(404).json({ success: false, message: "Product not found or you don't have permission" });
             }
-        });
 
-        if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found or you don't have permission" });
+            const data = {
+                // only overwrite fields if provided
+                ...(name ? { name } : {}),
+                ...(description ? { description } : {}),
+                ...(category ? { category } : {}),
+                ...(price ? { price: parseFloat(price) } : {}),
+            };
+            if (req.file) {
+                data.image_url = req.file.filename;
+            }
+
+            const updatedProduct = await prisma.product.update({
+                where: { id: productId },
+                data
+            });
+
+            res.json({ success: true, message: "Product updated successfully", data: updatedProduct });
+        } catch (error) {
+            res.status(500).json({ success: false, message: "Internal server error", error: error.message });
         }
-
-        const updatedProduct = await prisma.product.update({
-            where: { id: productId },
-            data: { name, description, category, price: price ? parseFloat(price) : undefined, image_url }
-        });
-
-        res.json({ success: true, message: "Product updated successfully", data: updatedProduct });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
-};
+];
 
 export const deleteProduct = async (req, res) => {
     try {
@@ -288,7 +330,7 @@ export const getOrderHistory = async (req, res) => {
 export const getAllProducts = async (req, res) => {
     try {
         const { category, search, page = 1, limit = 10 } = req.query;
-        
+
         const where = {
             status: 'ACTIVE'
         };
@@ -432,10 +474,10 @@ export const createPurchase = async (req, res) => {
             data: { cart_id: updatedCart }
         });
 
-        res.status(201).json({ 
-            success: true, 
-            message: "Purchase created successfully", 
-            data: orders 
+        res.status(201).json({
+            success: true,
+            message: "Purchase created successfully",
+            data: orders
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });

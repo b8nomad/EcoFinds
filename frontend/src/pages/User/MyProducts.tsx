@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, Package } from 'lucide-react'
+import { Plus, Edit, Trash2, Package, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import UserHeader from '@/components/UserHeader'
 
@@ -33,8 +33,10 @@ const MyProducts = () => {
     description: '',
     category: '',
     price: '',
-    image_url: ''
   })
+
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string>('')
 
   const categories = [
     'Electronics', 'Clothing', 'Home & Garden', 'Books', 'Sports',
@@ -71,9 +73,10 @@ const MyProducts = () => {
       description: '',
       category: '',
       price: '',
-      image_url: ''
     })
     setEditingProduct(null)
+    setImageFile(null)
+    setPreview('')
   }
 
   const openCreateModal = () => {
@@ -87,10 +90,28 @@ const MyProducts = () => {
       description: product.description,
       category: product.category,
       price: product.price.toString(),
-      image_url: product.image_url || ''
     })
+    setImageFile(null)
+    setPreview(`${import.meta.env.VITE_IMAGE_URL}/${product.image_url}` || '')
     setEditingProduct(product)
     setIsModalOpen(true)
+  }
+
+  const onFileSelected = (file?: File) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    setImageFile(file)
+    setPreview(URL.createObjectURL(file))
+  }
+
+  const handleDrop: React.DragEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const file = e.dataTransfer.files?.[0]
+    onFileSelected(file)
   }
 
   const submitProduct = async () => {
@@ -105,22 +126,29 @@ const MyProducts = () => {
       const url = editingProduct
         ? `${import.meta.env.VITE_API_URL}/user/products/${editingProduct.id}`
         : `${import.meta.env.VITE_API_URL}/user/products`
-
       const method = editingProduct ? 'PUT' : 'POST'
+
+      const body = new FormData()
+      body.append('name', formData.name)
+      body.append('description', formData.description)
+      body.append('category', formData.category)
+      body.append('price', formData.price)
+      if (imageFile) {
+        body.append('image', imageFile)
+      }
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+        headers: { Authorization: `Bearer ${token}` },
+        body
       })
 
       const data = await response.json()
       if (response.ok) {
         toast.success(editingProduct ? 'Product updated successfully!' : 'Product created successfully!')
         setIsModalOpen(false)
+        setImageFile(null)
+        setPreview('')
         resetForm()
         fetchMyProducts()
       } else {
@@ -255,13 +283,57 @@ const MyProducts = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input
-                    id="image_url"
-                    className="bg-gray-900 text-gray-100 placeholder:text-gray-400 border-gray-800"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
+                  <Label>Product Image</Label>
+                  {preview ? (
+                    <div className="mt-2">
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-800"
+                      />
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-gray-800"
+                          onClick={() => {
+                            setImageFile(null)
+                            setPreview('')
+                          }}
+                        >
+                          Remove
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-gray-800"
+                          onClick={() => document.getElementById('file-input-hidden')?.click()}
+                        >
+                          Change
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      onDrop={handleDrop}
+                      onClick={() => document.getElementById('file-input-hidden')?.click()}
+                      className="mt-2 flex flex-col items-center justify-center px-4 py-8 border-2 border-dashed rounded-lg border-gray-800 bg-gray-900 hover:bg-gray-900/80 transition-colors cursor-pointer"
+                    >
+                      <Upload className="h-6 w-6 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-300">Drag and drop an image here, or click to browse</p>
+                      <p className="text-xs text-gray-500 mt-1">JPG, PNG, WebP up to 5MB</p>
+                    </div>
+                  )}
+                  <input
+                    id="file-input-hidden"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => onFileSelected(e.target.files?.[0] || undefined)}
                   />
                 </div>
 
@@ -303,7 +375,7 @@ const MyProducts = () => {
                   <div className="relative aspect-square bg-gray-800/80 overflow-hidden">
                     {product.image_url ? (
                       <img
-                        src={product.image_url}
+                        src={`${import.meta.env.VITE_IMAGE_URL}/${product.image_url}`}
                         alt={product.name}
                         loading="lazy"
                         decoding="async"

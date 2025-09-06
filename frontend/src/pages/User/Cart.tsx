@@ -20,6 +20,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
 
+
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -140,7 +141,7 @@ const Cart = () => {
                       <div className="w-24 h-24 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                         {item.image_url ? (
                           <img
-                            src={item.image_url}
+                            src={`${import.meta.env.VITE_IMAGE_URL}/${item.image_url}`}
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />

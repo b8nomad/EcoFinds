@@ -48,6 +48,7 @@ const Home = () => {
     'Beauty', 'Toys', 'Automotive', 'Food', 'Other'
   ]
 
+
   const fetchProducts = async () => {
     try {
       setLoading(true)
@@ -196,7 +197,7 @@ const Home = () => {
                 <div className="relative aspect-square bg-gray-800/80 overflow-hidden">
                   {product.image_url ? (
                     <img
-                      src={product.image_url}
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${product.image_url}`}
                       alt={product.name}
                       loading="lazy"
                       decoding="async"
