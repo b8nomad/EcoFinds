@@ -176,17 +176,24 @@ export const updateOrderStatus = async (req, res) => {
 // Metrics
 export const getMetrics = async (_req, res) => {
     try {
-        const [productTotals, usersCount, ordersCount, topCategories] = await Promise.all([
+        const [productTotals, usersCount, ordersCount, rawTopCategories] = await Promise.all([
             prisma.product.groupBy({ by: ['status'], _count: { _all: true } }),
             prisma.user.count(),
             prisma.order.count(),
             prisma.product.groupBy({
                 by: ['category'],
-                _count: { _all: true },
-                orderBy: { _count: { _all: 'desc' } },
+                _count: { category: true }, // fixed
+                orderBy: { _count: { category: 'desc' } }, // fixed
                 take: 5
             })
         ])
+
+        // map to {_count: {_all}} to keep frontend unchanged
+        const topCategories = rawTopCategories.map(c => ({
+            category: c.category,
+            _count: { _all: c._count.category }
+        }))
+
         res.json({
             success: true,
             data: {
