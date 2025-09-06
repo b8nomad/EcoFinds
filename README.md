@@ -2,6 +2,14 @@
 
 Eco-friendly marketplace with separate Admin and User portals.
 
+---
+
+## 🎬 Demo Video
+
+[Watch Demo on Google Drive](https://drive.google.com/drive/folders/1iariNlIyvmc70WL5WWqYN5GUl9XtZXd2?usp=drive_link)
+
+---
+
 ## 1) Clone
 
 ```bash
@@ -60,4 +68,4 @@ VITE_IMAGE_URL=http://localhost:3000/uploads
 
 - Run backend first so the frontend can call the API.
 - Ensure your PostgreSQL DATABASE_URL is reachable and SSL-mode matches your host.
-- If schema changes: use npx prisma generate and migrate commands accordingly.
+- If schema changes: use npx prisma generate and migrate
