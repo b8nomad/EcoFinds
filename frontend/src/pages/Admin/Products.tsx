@@ -50,6 +50,15 @@ const Products = () => {
 
     useEffect(() => { fetchData() }, []) // initial load
 
+    // trigger fetch 1s after user stops typing in search
+    useEffect(() => {
+        const h = setTimeout(() => { fetchData() }, 1000)
+        return () => clearTimeout(h)
+    }, [search])
+
+    // fetch immediately on status change
+    useEffect(() => { fetchData() }, [status])
+
     const updateStatus = async (id: string, st: Product['status']) => {
         const res = await fetch(`${base}/admin/products/${id}/status`, {
             method: 'PUT',
@@ -209,9 +218,8 @@ const Products = () => {
                     </div>
                     <div className="flex gap-2">
                         <div className="flex gap-2">
-                            <Button onClick={fetchData}>Apply</Button>
                             <Button variant="secondary"
-                                onClick={() => { setSearch(''); setRole('ALL'); fetchData() }}
+                                onClick={() => { setSearch(''); setStatus('ALL'); fetchData() }}
                             >
                                 Clear
                             </Button>

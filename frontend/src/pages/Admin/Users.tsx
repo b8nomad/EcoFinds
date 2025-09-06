@@ -31,7 +31,16 @@ const Users = () => {
         setLoading(false)
     }
 
-    useEffect(() => { fetchData() }, [])
+    useEffect(() => { fetchData() }, []) // initial
+
+    // trigger fetch 1s after user stops typing in search
+    useEffect(() => {
+        const h = setTimeout(() => { fetchData() }, 1000)
+        return () => clearTimeout(h)
+    }, [search])
+
+    // fetch immediately on role change
+    useEffect(() => { fetchData() }, [role])
 
     const changeRole = async (u: UserRow, r: 'USER' | 'ADMIN') => {
         const res = await fetch(`${base}/admin/users/${u.id}/role`, {
@@ -73,7 +82,6 @@ const Users = () => {
                         </Select>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={fetchData}>Apply</Button>
                         <Button variant="secondary"
                             onClick={() => { setSearch(''); setRole('ALL'); fetchData() }}
                         >

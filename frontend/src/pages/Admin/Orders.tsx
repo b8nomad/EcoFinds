@@ -33,7 +33,16 @@ const Orders = () => {
         setLoading(false)
     }
 
-    useEffect(() => { fetchData() }, [])
+    useEffect(() => { fetchData() }, []) // initial
+
+    // trigger fetch 1s after user stops typing
+    useEffect(() => {
+        const h = setTimeout(() => { fetchData() }, 1000)
+        return () => clearTimeout(h)
+    }, [keyword])
+
+    // fetch immediately on status change
+    useEffect(() => { fetchData() }, [status])
 
     const changeStatus = async (o: OrderRow, s: OrderRow['status']) => {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/orders/${o.id}/status`, {
@@ -77,7 +86,6 @@ const Orders = () => {
                         </Select>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={fetchData}>Apply</Button>
                         <Button variant="secondary" onClick={() => { setStatus('ALL'); setKeyword(''); fetchData() }}>Clear</Button>
                     </div>
                 </div>
